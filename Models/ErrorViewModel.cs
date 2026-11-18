@@ -1,4 +1,4 @@
-namespace PacticaDeClinicaAmanecer.Models
+namespace ClinicaAmanecer.Models
 {
     public class ErrorViewModel
     {
