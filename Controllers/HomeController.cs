@@ -1,16 +1,33 @@
-using System.Diagnostics;
+
 using ClinicaAmanecer.Models;
+using ClinicaAmanecer.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace ClinicaAmanecer.Controllers
 {
-    public class HomeController : Controller
+    [Authorize(Policy = "dashboard.ver")]
+    public class HomeController(
+        ICitaService citaService,
+        IFacturaService facturaService) : Controller
     {
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var citasHoy = await citaService.GetCitasDelDiaAsync(DateTime.Today);
+            var facturas = await facturaService.GetHistorialFacturasAsync();
+
+            ViewBag.CitasDeHoy = citasHoy.Count;
+            ViewBag.ConsultasAtendidas = citasHoy.Count(c => c.EstadoCita == "Atendida");
+            ViewBag.PacientesEnEspera = citasHoy.Count(c => c.EstadoCita == "Programada");
+            ViewBag.IngresosDelDia = facturas
+                .Where(f => f.FechaEmision.Date == DateTime.Today && f.EstadoFactura == "Pagada")
+                .Sum(f => f.TotalNeto);
+
+            return View(citasHoy);
         }
 
+        [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
