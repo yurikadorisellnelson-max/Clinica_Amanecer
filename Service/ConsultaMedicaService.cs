@@ -9,13 +9,13 @@ namespace ClinicaAmanecer.Service
         ICitaRepository citaRepo) : IConsultaMedicaService
     {
         public Task<ConsultaMedica?> GetByCitaIdAsync(int citaId)
-        => consultaRepo.GetByCitaIdAsync(citaId);
+            => consultaRepo.GetByCitaIdAsync(citaId);
 
         public Task<IReadOnlyList<CatalogoDiagnosticoCIE10>> GetCatalogoCIE10Async()
-        => consultaRepo.GetCatalogoCIE10Async();
+            => consultaRepo.GetCatalogoCIE10Async();
 
         public Task<IReadOnlyList<CatalogoMedicamento>> GetCatalogoMedicamentosAsync()
-        => consultaRepo.GetCatalogoMedicamentosAsync();
+            => consultaRepo.GetCatalogoMedicamentosAsync();
 
         public async Task<(bool Success, string? ErrorMessage)> RegistrarConsultaCompletaAsync(SaveConsultaMedicaDto dto)
         {
@@ -44,39 +44,40 @@ namespace ClinicaAmanecer.Service
                     {
                         return (false, $"ALERTA DE FARMACOVIGILANCIA: El paciente presenta alergia registrada a '{alergiaConflicto}'. No se puede recetar '{med.NombreGenerico}'.");
                     }
-                    var consulta = new ConsultaMedica
-                    {
-                        Citas_CitaID = dto.CitaID,
-                        FechaAtencion = DateTime.Now,
-                        PresionArterial = dto.PresionArterial.Trim(),
-                        TemperaturaCorporal = dto.TemperaturaCorporal,
-                        PesoKG = dto.PesoKG,
-                        TallaCM = dto.TallaCM,
-                        Anamnesis = dto.Anamnesis.Trim(),
-                        ExploracionFisica = dto.ExploracionFisica.Trim(),
-                        PlanTratamiento = dto.PlanTratamiento.Trim()
-                    };
-
-                    var diagnosticos = dto.Diagnosticos.Select(d => new DetalleConsulta_Diagnostico
-                    {
-                        CatalogoDiagnostico_DiagnosticoID = d.DiagnosticoID,
-                        TipoCriterio = d.TipoCriterio,
-                        Observacion = d.Observacion
-                    }).ToList();
-
-                    var recetas = dto.RecetaMedicamentos.Select(r => new DetalleReceta_Medicamento
-                    {
-                        CatalogoMedicamentos_MedicamentoID = r.MedicamentoID,
-                        Dosis = r.Dosis,
-                        Frecuencia = r.Frecuencia,
-                        DuracionDias = r.DuracionDias,
-                        ViaAdministracion = r.ViaAdministracion
-                    }).ToList();
-
-                    await consultaRepo.CreateTransaccionalAsync(consulta, diagnosticos, recetas);
-                    return (true, null);
                 }
             }
+
+            var consulta = new ConsultaMedica
+            {
+                Citas_CitaID = dto.CitaID,
+                FechaAtencion = DateTime.Now,
+                PresionArterial = dto.PresionArterial.Trim(),
+                TemperaturaCorporal = dto.TemperaturaCorporal,
+                PesoKG = dto.PesoKG,
+                TallaCM = dto.TallaCM,
+                Anamnesis = dto.Anamnesis.Trim(),
+                ExploracionFisica = dto.ExploracionFisica.Trim(),
+                PlanTratamiento = dto.PlanTratamiento.Trim()
+            };
+
+            var diagnosticos = dto.Diagnosticos.Select(d => new DetalleConsulta_Diagnostico
+            {
+                CatalogoDiagnostico_DiagnosticoID = d.DiagnosticoID,
+                TipoCriterio = d.TipoCriterio,
+                Observacion = d.Observacion
+            }).ToList();
+
+            var recetas = dto.RecetaMedicamentos.Select(r => new DetalleReceta_Medicamento
+            {
+                CatalogoMedicamentos_MedicamentoID = r.MedicamentoID,
+                Dosis = r.Dosis,
+                Frecuencia = r.Frecuencia,
+                DuracionDias = r.DuracionDias,
+                ViaAdministracion = r.ViaAdministracion
+            }).ToList();
+
+            await consultaRepo.CreateTransaccionalAsync(consulta, diagnosticos, recetas);
+            return (true, null);
         }
     }
 }
