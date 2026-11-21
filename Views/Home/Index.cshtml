@@ -1,8 +1,89 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IReadOnlyList<ClinicaAmanecer.Models.Cita>
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["HeaderTitle"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- 4 KPI Cards superiores -->
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="fw-bold fs-6">@ViewBag.CitasDeHoy</div>
+            <div class="small text-dark">Citas de hoy</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="fw-bold fs-6">@ViewBag.ConsultasAtendidas</div>
+            <div class="small text-dark">Consultas atendidas</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="fw-bold fs-6">@ViewBag.PacientesEnEspera</div>
+            <div class="small text-dark">Pacientes en espera</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="fw-bold fs-6">$@(((decimal)ViewBag.IngresosDelDia).ToString("N0"))</div>
+            <div class="small text-dark">Ingresos del día</div>
+        </div>
+    </div>
+</div>
+
+<p class="text-secondary small mb-2 ms-1">Agenda Semanal de Citas</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered align-middle mb-0" style="border-color: #999;">
+        <thead style="background-color: #e0e0e0;">
+            <tr>
+                <th style="width: 140px; font-weight: 500;">Hora</th>
+                <th style="font-weight: 500;">Lunes</th>
+                <th style="font-weight: 500;">Martes</th>
+                <th style="font-weight: 500;">Miércoles</th>
+                <th style="font-weight: 500;">Jueves</th>
+                <th style="font-weight: 500;">Viernes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var filasHoras = new (string Etiqueta, int Hora24)[]
+                {
+                        ("8:00-16:00", 8),
+                        ("9:00", 9),
+                        ("10:00", 10),
+                        ("11:00", 11),
+                        ("12:00", 12),
+                        ("1:00", 13),
+                        ("2:00", 14)
+                };
+
+                foreach (var fila in filasHoras)
+                {
+                    <tr style="height: 44px;">
+                        <td class="fs-6">@fila.Etiqueta</td>
+                        @for (int dia = 1; dia <= 5; dia++)
+                        {
+                            var cita = Model.FirstOrDefault(c => (int)c.FechaCita.DayOfWeek == dia && c.HoraCita.Hours == fila.Hora24);
+                            if (cita != null)
+                            {
+                                <td class="fw-semibold">
+                                    Dr./Dra. @cita.Medico?.Nombres (@cita.Paciente?.Nombres)
+                                </td>
+                            }
+                            else if (fila.Hora24 == 8 && dia == 1)
+                            {
+                                <td>Dr.manuel</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
 </div>

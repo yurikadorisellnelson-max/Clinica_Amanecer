@@ -1,0 +1,297 @@
+﻿@using ClinicaAmanecer.Models
+@model IReadOnlyList<ClinicaAmanecer.Models.Cita>
+@{
+    ViewData["Title"] = "Citas médicas";
+    ViewData["HeaderTitle"] = "Citas médicas";
+    var pacientes = ViewBag.Pacientes as IReadOnlyList<Paciente> ?? [];
+    var medicos = ViewBag.Medicos as IReadOnlyList<Medico> ?? [];
+    var consultorios = ViewBag.Consultorios as IReadOnlyList<Consultorio> ?? [];
+    var especialidades = medicos.Select(m => m.Especialidad).Where(e => e != null).DistinctBy(e => e!.EspecialidadID).ToList();
+    string fechaActual = ViewBag.FechaActual ?? DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<style>
+    .cita-box-input {
+        border: 1.5px solid #4a90e2;
+        padding: 3px 8px;
+        font-size: 0.85rem;
+        width: 100%;
+        outline: none;
+    }
+</style>
+
+<div class="row g-3 mb-3">
+    <!-- 1. Programar Nueva Cita -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold mb-3">Programar Nueva Cita</h6>
+
+            <form id="formNuevaCita">
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Nombre Paciente:</label>
+                    <div class="col-sm-8">
+                        <select id="citaPacienteID" class="cita-box-input" required>
+                            <option value="">-- Seleccione Paciente --</option>
+                            @foreach (var p in pacientes)
+                            {
+                                <option value="@p.PacienteID">@p.Nombres @p.Apellidos (@p.NumeroExpediente)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Especialidad:</label>
+                    <div class="col-sm-8">
+                        <select id="citaEspecialidadID" class="cita-box-input" onchange="filtrarMedicosPorEspecialidad()">
+                            <option value="">-- Todas las Especialidades --</option>
+                            @foreach (var esp in especialidades)
+                            {
+                                <option value="@esp!.EspecialidadID">@esp.NombreEspecialidad</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Medico:</label>
+                    <div class="col-sm-8">
+                        <select id="citaMedicoID" class="cita-box-input" required>
+                            <option value="">-- Seleccione Médico --</option>
+                            @foreach (var m in medicos)
+                            {
+                                <option value="@m.MedicoID" data-esp="@m.Especialidades_EspecialidadID" data-turno="@m.TurnoHorario">
+                                    Dra./Dr. @m.Nombres @m.Apellidos (@m.TurnoHorario)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Consultorio:</label>
+                    <div class="col-sm-8">
+                        <select id="citaConsultorioID" class="cita-box-input" required>
+                            <option value="">-- Seleccione Consultorio --</option>
+                            @foreach (var c in consultorios)
+                            {
+                                <option value="@c.ConsultorioID">@c.CodigoSala - @c.NombreSala</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Fecha de citas</label>
+                    <div class="col-sm-4">
+                        <input type="date" id="citaFecha" class="cita-box-input" value="@fechaActual" required />
+                    </div>
+                    <label class="col-sm-1 col-form-label small text-secondary px-0">Hora:</label>
+                    <div class="col-sm-3">
+                        <input type="time" id="citaHora" class="cita-box-input" value="09:00" required />
+                    </div>
+                </div>
+
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Motivo de Consulta</label>
+                    <div class="col-sm-6">
+                        <input type="text" id="citaMotivo" class="cita-box-input" required />
+                    </div>
+                </div>
+
+                <div class="row align-items-center mt-2">
+                    <label class="col-sm-4 col-form-label small text-secondary">Estado:</label>
+                    <div class="col-sm-4">
+                        <select id="citaEstado" class="cita-box-input">
+                            <option value="Programada">Programada</option>
+                            <option value="Atendida">Atendida</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-4 text-end">
+                        <button type="submit" class="btn-dark-pill btn-sm">+ Guardar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Disponibilidad de Médicos y Consultorios -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold mb-3">Disponibilidad de Medicos Y Consultorios</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0 small" style="border-color:#888;">
+                    <thead style="background-color: #d0d0d0;">
+                        <tr>
+                            <th>Medico</th>
+                            <th>Especialidad</th>
+                            <th>Consultorio</th>
+                            <th>Turno Horario</th>
+                            <th>Disponibilidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int idx = 0;
+                            foreach (var m in medicos)
+                            {
+                                var cons = consultorios.ElementAtOrDefault(idx % (consultorios.Count > 0 ? consultorios.Count : 1));
+                                bool ocupado = Model.Any(c => c.Medicos_MedicoID == m.MedicoID && c.EstadoCita == "Programada");
+                                idx++;
+                                <tr>
+                                    <td>Dra./Dr. @m.Nombres @m.Apellidos</td>
+                                    <td>@m.Especialidad?.NombreEspecialidad</td>
+                                    <td>@(cons?.CodigoSala ?? "CONS-A1")</td>
+                                    <td>@m.TurnoHorario</td>
+                                    <td class="d-flex justify-content-between align-items-center">
+                                        @if (ocupado)
+                                        {
+                                            <span class="badge bg-dark">✕</span>
+                                            <span>Ocupado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="border border-dark px-1 fw-bold">✓</span>
+                                            <span>Libre</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Listado de Citas Programadas del Día -->
+<div class="card-wireframe p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Listado de Citas Programadas del Dia</h5>
+        <input type="text" id="txtFiltroTablaCita" class="form-control form-control-sm rounded-pill" style="width: 220px; border: 1.5px solid #4a90e2;" placeholder="Escribe algo" onkeyup="filtrarCitasEnPantalla()" />
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0 small" id="tablaCitasDia" style="border-color:#888;">
+            <thead style="background-color: #d0d0d0;">
+                <tr>
+                    <th>Hora</th>
+                    <th>N° Expedientes</th>
+                    <th>Paciente</th>
+                    <th>Medico/Especialidad</th>
+                    <th>Consultorio</th>
+                    <th>Motivo</th>
+                    <th>Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>@DateTime.Today.Add(c.HoraCita).ToString("hh:mm tt")</td>
+                        <td>@c.Paciente?.NumeroExpediente</td>
+                        <td>@c.Paciente?.Nombres @c.Paciente?.Apellidos</td>
+                        <td>Dra./Dr. @c.Medico?.Nombres / @c.Medico?.Especialidad?.NombreEspecialidad</td>
+                        <td>@c.Consultorio?.CodigoSala</td>
+                        <td>@c.MotivoConsulta</td>
+                        <td>@c.EstadoCita</td>
+                        <td class="text-center">
+                            <a asp-controller="Consulta" asp-action="Index" asp-route-citaId="@c.CitaID" class="btn-pill-purple me-1">Consulta</a>
+                            <button type="button" class="btn-pill-purple me-1" onclick="cargarParaReprogramar('@c.Pacientes_PacienteID','@c.Medicos_MedicoID','@c.Consultorios_ConsultorioID','@c.MotivoConsulta')">Reprogramar</button>
+                            <button type="button" class="btn-pill-purple" onclick="cancelarCita(@c.CitaID)">Cancelar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filtrarMedicosPorEspecialidad() {
+            const espId = document.getElementById("citaEspecialidadID").value;
+            const selMed = document.getElementById("citaMedicoID");
+            Array.from(selMed.options).forEach(opt => {
+                if (!opt.value) return;
+                opt.hidden = espId && opt.getAttribute("data-esp") !== espId;
+            });
+            selMed.value = "";
+        }
+
+        function filtrarCitasEnPantalla() {
+            const term = document.getElementById("txtFiltroTablaCita").value.toLowerCase();
+            document.querySelectorAll("#tablaCitasDia tbody tr").forEach(tr => {
+                tr.style.display = tr.innerText.toLowerCase().includes(term) ? "" : "none";
+            });
+        }
+
+        function cargarParaReprogramar(pacId, medId, consId, motivo) {
+            document.getElementById("citaPacienteID").value = pacId;
+            document.getElementById("citaMedicoID").value = medId;
+            document.getElementById("citaConsultorioID").value = consId;
+            document.getElementById("citaMotivo").value = motivo + " (Reprogramada)";
+            document.getElementById("citaHora").focus();
+        }
+
+        document.getElementById("formNuevaCita").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const selMed = document.getElementById("citaMedicoID");
+            const optMed = selMed.options[selMed.selectedIndex];
+            const turno = optMed ? optMed.getAttribute("data-turno") : "";
+            const horaInput = document.getElementById("citaHora").value;
+            const motivo = document.getElementById("citaMotivo").value.trim();
+
+            if (motivo.length < 4) {
+                mostrarModalClinica("El motivo de consulta es obligatorio y debe tener al menos 4 caracteres.");
+                return;
+            }
+
+            if (turno && turno.includes("-")) {
+                const partes = turno.split("-");
+                const hCita = parseInt(horaInput.split(":")[0]);
+                const hIni = parseInt(partes[0].split(":")[0]);
+                const hFin = parseInt(partes[1].split(":")[0]);
+                if (hCita < hIni || hCita >= hFin) {
+                    mostrarModalClinica(Error: La hora seleccionada (${horaInput}) está fuera del turno del médico (${turno}).);
+                    return;
+                }
+            }
+
+            const dto = {
+                pacienteID: parseInt(document.getElementById("citaPacienteID").value),
+                medicoID: parseInt(selMed.value),
+                consultorioID: parseInt(document.getElementById("citaConsultorioID").value),
+                fechaCita: document.getElementById("citaFecha").value,
+                horaCita: horaInput.length === 5 ? horaInput + ":00" : horaInput,
+                motivoConsulta: motivo,
+                estadoCita: document.getElementById("citaEstado").value
+            };
+
+            const res = await fetch("/Cita/Create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                mostrarModalClinica(data.message, () => location.reload());
+            } else {
+                mostrarModalClinica(data.message || "Choque de horario detectado.");
+            }
+        });
+
+        async function cancelarCita(id) {
+            if (!confirm("¿Seguro que desea cancelar esta cita?")) return;
+            const res = await fetch(/Cita/Cancelar?id=${id}, { method: "POST" });
+            const data = await res.json();
+            mostrarModalClinica(data.message, () => {
+                if (res.ok) location.reload();
+            });
+        }
+    </script>
+}

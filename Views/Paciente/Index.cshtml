@@ -1,0 +1,375 @@
+﻿@using ClinicaAmanecer.Models
+@{
+    ViewData["Title"] = "Paciente";
+    ViewData["HeaderTitle"] = "Paciente";
+    var catalogoAlergias = ViewBag.CatalogoAlergias as IReadOnlyList<CatalogoAlergia> ?? [];
+}
+
+<style>
+    .pill-input-gray {
+        background-color: #a6a3a8;
+        border: 1.5px solid #7952b3;
+        border-radius: 10px;
+        color: #111;
+        padding: 3px 10px;
+        font-size: 0.85rem;
+        width: 100%;
+        outline: none;
+    }
+
+        .pill-input-gray::placeholder {
+            color: #333;
+        }
+
+    .blue-box-input {
+        border: 1.5px solid #4a90e2;
+        padding: 3px 8px;
+        font-size: 0.85rem;
+        width: 100%;
+        outline: none;
+    }
+</style>
+
+<div class="row g-3 mb-3">
+    <!-- 1. Registro de Paciente -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold mb-3">Registro de Paciente</h6>
+            <input type="hidden" id="pacID" value="" />
+
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-3"><label class="small mb-0">N° Expediente</label></div>
+                <div class="col-3"><input type="text" id="pacExpediente" class="pill-input-gray" placeholder="EXP-2026-001" /></div>
+                <div class="col-2 text-end"><label class="small mb-0">Sexo</label></div>
+                <div class="col-4">
+                    <select id="pacSexo" class="pill-input-gray">
+                        <option value="F">Femenino (F)</option>
+                        <option value="M">Masculino (M)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-3"><label class="small mb-0">Cédula</label></div>
+                <div class="col-3"><input type="text" id="pacCedula" class="pill-input-gray" placeholder="601-150599-1000A" /></div>
+                <div class="col-2 text-end"><label class="small mb-0">Apellidos</label></div>
+                <div class="col-4"><input type="text" id="pacApellidos" class="pill-input-gray" /></div>
+            </div>
+
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-3"><label class="small mb-0">Nombres</label></div>
+                <div class="col-3"><input type="text" id="pacNombres" class="pill-input-gray" /></div>
+                <div class="col-2 text-end"><label class="small mb-0">Teléfono</label></div>
+                <div class="col-4"><input type="text" id="pacTelefono" class="pill-input-gray" placeholder="8888-9999" /></div>
+            </div>
+
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-4"><label class="small mb-0">Fecha De Nacimiento</label></div>
+                <div class="col-5"><input type="date" id="pacFechaNac" class="pill-input-gray" /></div>
+            </div>
+
+            <div class="row g-2 mb-3 align-items-center">
+                <div class="col-3"><label class="small mb-0">Direccion</label></div>
+                <div class="col-4"><input type="text" id="pacDireccion" class="pill-input-gray" /></div>
+                <div class="col-3 text-end"><label class="small mb-0">Tipo de Sangre</label></div>
+                <div class="col-2">
+                    <select id="pacSangre" class="pill-input-gray text-center fw-bold px-1">
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="AB+">AB+</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="form-check d-flex align-items-center gap-2">
+                    <input class="form-check-input m-0" type="checkbox" id="pacEstado" checked style="border: 2px solid #7952b3;" />
+                    <label class="form-check-label small" for="pacEstado">Paciente Activo</label>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill me-2" onclick="limpiarFormularioPaciente()">Limpiar</button>
+                    <button type="button" class="btn-dark-pill btn-sm" onclick="guardarPacienteMaestroDetalle()">+ Guardar Paciente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Alergias del Paciente -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold mb-3">Alergias del Paciente</h6>
+
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-4"><label class="small text-secondary mb-0">Escriba el alergeno</label></div>
+                <div class="col-8">
+                    <select id="selAlergia" class="blue-box-input">
+                        @foreach (var a in catalogoAlergias)
+                        {
+                            <option value="@a.AlergiaID" data-nombre="@a.NombreAlergeno" data-cat="@a.CategoriaAlergia">
+                                @a.NombreAlergeno (@a.CategoriaAlergia)
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-4"><label class="small text-secondary mb-0">Nivel De Severidad</label></div>
+                <div class="col-8">
+                    <select id="selSeveridad" class="blue-box-input">
+                        <option value="Severa">Severa</option>
+                        <option value="Moderada">Moderada</option>
+                        <option value="Leve">Leve</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3 align-items-center">
+                <div class="col-4"><label class="small text-secondary mb-0">Notas de Reaccion</label></div>
+                <div class="col-5">
+                    <input type="text" id="txtNotaAlergia" class="blue-box-input" placeholder="Ej. Erupción Cutánea" />
+                </div>
+                <div class="col-3 text-end">
+                    <button type="button" class="btn-dark-pill btn-sm py-1 px-3" onclick="agregarAlergiaDetalle()">+ Agregar</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0 small" style="border-color:#888;">
+                    <thead style="background-color: #d0d0d0;">
+                        <tr>
+                            <th>Alérgeno</th>
+                            <th>Categoria</th>
+                            <th>Severidad</th>
+                            <th>Notas</th>
+                            <th class="text-center">Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyAlergias"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Directorio de Pacientes -->
+<div class="card-wireframe p-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold mb-0">Directorio de Pacientes Registrados</h6>
+        <input type="text" id="txtBuscarPaciente" class="form-control form-control-sm rounded-pill" style="width: 230px; border: 1.5px solid #4a90e2;" placeholder="Escribe algo" onkeyup="cargarDirectorioPacientes()" />
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0 small" style="border-color:#888;">
+            <thead style="background-color: #d0d0d0;">
+                <tr>
+                    <th>Expediente</th>
+                    <th>Cédula</th>
+                    <th>Nombre Completo</th>
+                    <th>tipo de Sangre</th>
+                    <th>Teléfono</th>
+                    <th>Alergia</th>
+                    <th>Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyDirectorioPacientes"></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let listaAlergias = [];
+
+        function renderizarTablaAlergias() {
+            const tbody = document.getElementById("tbodyAlergias");
+            tbody.innerHTML = "";
+            if (listaAlergias.length === 0) {
+                tbody.innerHTML = <tr><td colspan="5" class="text-center text-muted">Sin alergias agregadas</td></tr>;
+                return;
+            }
+            listaAlergias.forEach((item, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.nombreAlergeno}</td>
+                        <td>${item.categoriaAlergia}</td>
+                        <td>${item.nivelSeveridad}</td>
+                        <td>${item.notasReaccion || ""}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-dark py-0 px-2" onclick="quitarAlergia(${idx})">✕</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function agregarAlergiaDetalle() {
+            const sel = document.getElementById("selAlergia");
+            const opt = sel.options[sel.selectedIndex];
+            const alergiaId = parseInt(sel.value);
+            const nota = document.getElementById("txtNotaAlergia").value.trim();
+
+            if (!nota) {
+                mostrarModalClinica("Error: Indique las notas de reacción antes de agregar la alergia.");
+                return;
+            }
+            if (listaAlergias.some(a => a.alergiaID === alergiaId)) {
+                mostrarModalClinica("Aviso: Este alérgeno ya fue agregado a la lista del paciente.");
+                return;
+            }
+
+            listaAlergias.push({
+                alergiaID: alergiaId,
+                nombreAlergeno: opt.getAttribute("data-nombre"),
+                categoriaAlergia: opt.getAttribute("data-cat"),
+                nivelSeveridad: document.getElementById("selSeveridad").value,
+                notasReaccion: nota
+            });
+
+            document.getElementById("txtNotaAlergia").value = "";
+            renderizarTablaAlergias();
+        }
+
+        function quitarAlergia(index) {
+            listaAlergias.splice(index, 1);
+            renderizarTablaAlergias();
+        }
+
+        async function guardarPacienteMaestroDetalle() {
+            const exp = document.getElementById("pacExpediente").value.trim();
+            const ced = document.getElementById("pacCedula").value.trim();
+            const nom = document.getElementById("pacNombres").value.trim();
+            const ape = document.getElementById("pacApellidos").value.trim();
+            const fec = document.getElementById("pacFechaNac").value;
+            const tel = document.getElementById("pacTelefono").value.trim();
+
+            if (!exp || !/^EXP-\d{4}-\d{3}$/i.test(exp)) {
+                mostrarModalClinica("El N° de Expediente es obligatorio y debe tener formato EXP-2026-001.");
+                return;
+            }
+            if (ced.length < 8) {
+                mostrarModalClinica("Error: Ingrese un número de cédula válido.");
+                return;
+            }
+            if (!nom || !ape) {
+                mostrarModalClinica("Los nombres y apellidos del paciente son obligatorios.");
+                return;
+            }
+            if (!fec || new Date(fec) > new Date()) {
+                mostrarModalClinica("Error: Seleccione una fecha de nacimiento válida (no puede ser futura).");
+                return;
+            }
+            if (!/^[0-9\-\s]{8,15}$/.test(tel)) {
+                mostrarModalClinica("Error: El teléfono debe contener al menos 8 dígitos numéricos.");
+                return;
+            }
+
+            const idVal = document.getElementById("pacID").value;
+            const dto = {
+                pacienteID: idVal ? parseInt(idVal) : null,
+                numeroExpediente: exp.toUpperCase(),
+                cedula: ced,
+                nombres: nom,
+                apellidos: ape,
+                fechaNacimiento: fec,
+                sexo: document.getElementById("pacSexo").value,
+                tipoSangre: document.getElementById("pacSangre").value,
+                telefono: tel,
+                direccion: document.getElementById("pacDireccion").value.trim(),
+                estado: document.getElementById("pacEstado").checked,
+                alergias: listaAlergias
+            };
+
+            const url = dto.pacienteID ? "/Paciente/Update" : "/Paciente/Create";
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                mostrarModalClinica(data.message || "Error al guardar el paciente.");
+                return;
+            }
+
+            mostrarModalClinica(data.message, () => {
+                limpiarFormularioPaciente();
+                cargarDirectorioPacientes();
+            });
+        }
+
+        async function editarPaciente(id) {
+            const res = await fetch(/Paciente/GetById?id=${id});
+            if (!res.ok) return;
+            const p = await res.json();
+
+            document.getElementById("pacID").value = p.pacienteID;
+            document.getElementById("pacExpediente").value = p.numeroExpediente;
+            document.getElementById("pacCedula").value = p.cedula;
+            document.getElementById("pacNombres").value = p.nombres;
+            document.getElementById("pacApellidos").value = p.apellidos;
+            document.getElementById("pacFechaNac").value = p.fechaNacimiento.split("T")[0];
+            document.getElementById("pacSexo").value = p.sexo;
+            document.getElementById("pacSangre").value = p.tipoSangre;
+            document.getElementById("pacTelefono").value = p.telefono;
+            document.getElementById("pacDireccion").value = p.direccion || "";
+            document.getElementById("pacEstado").checked = p.estado;
+
+            listaAlergias = p.alergias || [];
+            renderizarTablaAlergias();
+        }
+
+        function limpiarFormularioPaciente() {
+            document.getElementById("pacID").value = "";
+            document.getElementById("pacExpediente").value = "";
+            document.getElementById("pacCedula").value = "";
+            document.getElementById("pacNombres").value = "";
+            document.getElementById("pacApellidos").value = "";
+            document.getElementById("pacFechaNac").value = "";
+            document.getElementById("pacTelefono").value = "";
+            document.getElementById("pacDireccion").value = "";
+            listaAlergias = [];
+            renderizarTablaAlergias();
+        }
+
+        async function cargarDirectorioPacientes() {
+            const search = document.getElementById("txtBuscarPaciente").value;
+            const formData = new FormData();
+            formData.append("Draw", "1");
+            formData.append("Start", "0");
+            formData.append("Length", "50");
+            formData.append("Search.Value", search);
+
+            const res = await fetch("/Paciente/GetData", { method: "POST", body: formData });
+            const result = await res.json();
+
+            const tbody = document.getElementById("tbodyDirectorioPacientes");
+            tbody.innerHTML = "";
+            result.data.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.numeroExpediente}</td>
+                        <td>${p.cedula}</td>
+                        <td>${p.nombreCompleto}</td>
+                        <td>${p.tipoSangre}</td>
+                        <td>${p.telefono}</td>
+                        <td>${p.resumenAlergias}</td>
+                        <td>${p.estado ? "Activó" : "Inactivo"}</td>
+                        <td class="text-center">
+                            <button class="btn-pill-purple me-1" onclick="editarPaciente(${p.pacienteID})">Editar</button>
+                            <a href="/Consulta/Index" class="btn-pill-purple">Ver Historia</a>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderizarTablaAlergias();
+            cargarDirectorioPacientes();
+        });
+    </script>
+}
