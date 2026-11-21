@@ -1,50 +1,309 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using ClinicaAmanecer.Extenciones
+@{
+    string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+}
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Clinica_Amanecer</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - Clínica Amanecer</title>
+
+    <!-- Favicon SVG con el Logo del Consultorio en la pestaña del navegador -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23dfd6f7' stroke='%23212529' stroke-width='5'/%3E%3Cpath d='M 28 52 L 28 65 L 12 65 L 12 40 L 28 40 L 28 18 L 48 18 L 48 40 L 58 40' fill='none' stroke='%231a1a1a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='24' y1='84' x2='90' y2='84' stroke='%231a1a1a' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M 46 84 A 18 18 0 0 1 82 84' fill='%23f59f00' stroke='%231a1a1a' stroke-width='5'/%3E%3Cline x1='64' y1='58' x2='64' y2='45' stroke='%231a1a1a' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='48' y1='64' x2='40' y2='54' stroke='%231a1a1a' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='80' y1='64' x2='88' y2='54' stroke='%231a1a1a' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" />
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Clinica_Amanecer.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background-color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .top-header {
+            background-color: #dfd6f7;
+            border-bottom: 2px solid #7952b3;
+            padding: 10px 24px;
+        }
+
+        .sidebar {
+            width: 255px;
+            min-height: calc(100vh - 54px);
+            background: #e2e2e2;
+            border-right: 2px solid #212529;
+        }
+
+            .sidebar .nav-link {
+                color: #111;
+                background-color: #ffffff;
+                font-weight: 500;
+                font-size: 1.05rem;
+                padding: 15px 20px;
+                border-bottom: 2.5px solid #7952b3;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+                .sidebar .nav-link i {
+                    font-size: 1.55rem;
+                    color: #111;
+                    width: 30px;
+                    text-align: center;
+                }
+
+                .sidebar .nav-link:hover, .sidebar .nav-link.active {
+                    background-color: #dfd6f7;
+                    color: #111;
+                    font-weight: 700;
+                }
+
+        .card-wireframe {
+            border: 1.8px solid #212529;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        .kpi-card {
+            border: 1.8px solid #7952b3;
+            border-radius: 10px;
+            background: #f4effe;
+            padding: 16px 12px;
+            text-align: center;
+        }
+
+        .btn-pill-purple {
+            background-color: #c5b3f3;
+            color: #111;
+            border: 1.5px solid #4a2c82;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+            .btn-pill-purple:hover {
+                background-color: #b098ef;
+                color: #000;
+            }
+
+        .btn-pill-red {
+            background-color: #e35d6a;
+            color: #111;
+            border: 1.5px solid #4a2c82;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .btn-dark-pill {
+            background-color: #191919;
+            color: #ffffff;
+            border-radius: 20px;
+            padding: 6px 20px;
+            font-weight: 600;
+            border: none;
+        }
+
+            .btn-dark-pill:hover {
+                background-color: #333;
+                color: #fff;
+            }
+
+        .vital-pill {
+            border: 1.8px solid #7952b3;
+            border-radius: 10px;
+            padding: 5px 12px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vital-line-input {
+            border: 1.8px solid #7952b3;
+            border-radius: 10px;
+            padding: 7px 14px;
+            width: 100%;
+            font-weight: 700;
+            color: #111;
+            outline: none;
+        }
+
+        .clinica-modal-content {
+            border: 2.5px solid #212529;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+        }
+
+        .clinica-modal-header {
+            background-color: #dfd6f7;
+            border-bottom: 2px solid #212529;
+            padding: 12px 20px;
+        }
+
+        .clinica-modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            border: 2.5px solid #212529;
+            margin-bottom: 12px;
+            animation: popModalIcon 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @@keyframes popModalIcon {
+            0% {
+                transform: scale(0.4);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Clinica_Amanecer</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <header class="top-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold text-dark">@(ViewData["HeaderTitle"] ?? ViewData["Title"])</h4>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-dark px-3 py-2">
+                    <i class="bi bi-person-badge me-1"></i> @User.FindFirst("NombreCompleto")?.Value (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)
+                </span>
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
+                    <button type="submit" class="btn btn-sm btn-outline-dark fw-bold">Logout</button>
+                </form>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+        </header>
+
+        <div class="d-flex">
+            <nav class="sidebar flex-shrink-0">
+                <div class="nav flex-column">
+                    @if (User.TienePermiso("dashboard.ver"))
+                    {
+                        <a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-house-door-fill"></i> Dashboard
+                        </a>
+                    }
+                    @if (User.TienePermiso("paciente.ver"))
+                    {
+                        <a class="nav-link @(currentController == "Paciente" ? "active" : "")" asp-controller="Paciente" asp-action="Index">
+                            <i class="bi bi-people-fill"></i> Paciente
+                        </a>
+                    }
+                    @if (User.TienePermiso("cita.ver"))
+                    {
+                        <a class="nav-link @(currentController == "Cita" ? "active" : "")" asp-controller="Cita" asp-action="Index">
+                            <i class="bi bi-calendar3"></i> Citas Medicas
+                        </a>
+                    }
+                    @if (User.TienePermiso("consulta.ver"))
+                    {
+                        <a class="nav-link @(currentController == "Consulta" ? "active" : "")" asp-controller="Consulta" asp-action="Index">
+                            <i class="bi bi-heart-pulse"></i> Consultas y Expediente
+                        </a>
+                    }
+                    @if (User.TienePermiso("factura.ver"))
+                    {
+                        <a class="nav-link @(currentController == "Factura" ? "active" : "")" asp-controller="Factura" asp-action="Index">
+                            <i class="bi bi-receipt"></i> Facturacion/Caja
+                        </a>
+                    }
+                    @if (User.TienePermiso("seguridad.ver"))
+                    {
+                        <a class="nav-link @(currentController == "Seguridad" ? "active" : "")" asp-controller="Seguridad" asp-action="Index">
+                            <i class="bi bi-wrench"></i> Usuarios y Permisos
+                        </a>
+                    }
+                </div>
+            </nav>
+
+            <main class="flex-grow-1 p-3">
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        <main>
             @RenderBody()
         </main>
+    }
+
+    <!-- Modal Global de Notificaciones de Clínica Amanecer -->
+    <div class="modal fade" id="clinicaMensajeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 430px;">
+            <div class="modal-content clinica-modal-content">
+                <div class="clinica-modal-header d-flex justify-content-between align-items-center">
+                    <h6 class="modal-title fw-bold mb-0 text-dark" id="clinicaModalTitulo">
+                        Clínica Amanecer — Notificación
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-center p-4 bg-white">
+                    <div id="clinicaModalIconBox" class="clinica-modal-icon" style="background-color: #d3f9d8; color: #198754;">
+                        <i id="clinicaModalIcon" class="bi bi-check-lg fw-bold"></i>
+                    </div>
+                    <p id="clinicaModalTexto" class="fw-semibold text-dark fs-6 mb-4">
+                        Operación completada exitosamente.
+                    </p>
+                    <button type="button" class="btn-dark-pill px-5 py-2" data-bs-dismiss="modal" id="btnAceptarModal">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Clinica_Amanecer - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function mostrarModalClinica(mensaje, callbackCerrar = null) {
+            const modalEl = document.getElementById("clinicaMensajeModal");
+            const txtEl = document.getElementById("clinicaModalTexto");
+            const iconBox = document.getElementById("clinicaModalIconBox");
+            const icon = document.getElementById("clinicaModalIcon");
+            const titulo = document.getElementById("clinicaModalTitulo");
+
+            const texto = String(mensaje || "Operación realizada.");
+            txtEl.textContent = texto;
+
+            const esAlerta = /error|alerta|inválid|no se|choque|falta|obligatorio|negativo|fuera/i.test(texto);
+            if (esAlerta) {
+                titulo.textContent = "Clínica Amanecer — Aviso del Sistema";
+                iconBox.style.backgroundColor = "#ffe3e3";
+                iconBox.style.color = "#dc3545";
+                icon.className = "bi bi-exclamation-triangle-fill";
+            } else {
+                titulo.textContent = "Clínica Amanecer — Operación Exitosa";
+                iconBox.style.backgroundColor = "#d3f9d8";
+                iconBox.style.color = "#198754";
+                icon.className = "bi bi-check-lg";
+            }
+
+            const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalEl.addEventListener("hidden.bs.modal", function handler() {
+                modalEl.removeEventListener("hidden.bs.modal", handler);
+                if (typeof callbackCerrar === "function") callbackCerrar();
+            });
+            bsModal.show();
+        }
+
+        window.alert = function (mensaje) {
+            mostrarModalClinica(mensaje);
+        };
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
