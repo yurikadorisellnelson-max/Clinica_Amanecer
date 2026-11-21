@@ -1,0 +1,344 @@
+﻿@using ClinicaAmanecer.Models
+@{
+    ViewData["Title"] = "Consultas y expediente";
+    ViewData["HeaderTitle"] = "Consultas y expediente";
+    var citasDelDia = ViewBag.CitasDelDia as IReadOnlyList<Cita> ?? [];
+    var citaActual = ViewBag.CitaSeleccionada as Cita;
+    var catalogoCIE10 = ViewBag.CatalogoCIE10 as IReadOnlyList<CatalogoDiagnosticoCIE10> ?? [];
+    var catalogoMeds = ViewBag.CatalogoMedicamentos as IReadOnlyList<CatalogoMedicamento> ?? [];
+
+    string alergiasTexto = citaActual?.Paciente?.DetalleAlergias != null && citaActual.Paciente.DetalleAlergias.Any()
+        ? string.Join(", ", citaActual.Paciente.DetalleAlergias.Select(a => a.CatalogoAlergia.NombreAlergeno))
+        : "Ninguna";
+}
+
+<!-- 1. Cabecera de Consultas y Signos Vitales -->
+<div class="card-wireframe p-3 mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="fw-bold mb-0">1.Cabecera de Consultas y Signos Vitales (Tabla: ConsultasMedicas)</h5>
+        <form method="get" asp-controller="Consulta" asp-action="Index">
+            <select name="citaId" class="form-select form-select-sm border-dark" onchange="this.form.submit()">
+                @foreach (var c in citasDelDia)
+                {
+                    <option value="@c.CitaID" selected="@(citaActual?.CitaID == c.CitaID)">
+                        Cambiar Paciente: @c.Paciente?.Nombres @c.Paciente?.Apellidos (@c.Paciente?.NumeroExpediente)
+                    </option>
+                }
+            </select>
+        </form>
+    </div>
+
+    <input type="hidden" id="consCitaID" value="@(citaActual?.CitaID ?? 0)" />
+    <input type="hidden" id="txtAlergiaActiva" value="@alergiasTexto" />
+
+    <div class="p-2 mb-3 text-center fw-bold"
+         style="background-color: #b5b3b8; border: 1.8px solid #7952b3; border-radius: 10px; font-size: 1.05rem;">
+        Paciente:@(citaActual != null ? $"{citaActual.Paciente.Nombres} {citaActual.Paciente.Apellidos} ({citaActual.Paciente.NumeroExpediente})" : "Maria Lopez (EXP-2026-014)")
+        &nbsp;|&nbsp; Alergia Registrada: &nbsp;<i class="bi bi-exclamation-triangle-fill"></i> @alergiasTexto
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="vital-pill">
+                <span class="me-1">Presion Arterial(</span>
+                <input type="text" id="consPresion" class="border-0 text-center fw-semibold" style="width: 65px; outline:none;" value="120/80" />
+                <span>)</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vital-pill">
+                <span class="me-1">Temperatura(</span>
+                <input type="number" step="0.1" id="consTemp" class="border-0 text-center fw-semibold" style="width: 55px; outline:none;" value="36.8" />
+                <span>°C)</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vital-pill">
+                <span class="me-1">Peso(</span>
+                <input type="number" step="0.1" id="consPeso" class="border-0 text-center fw-semibold" style="width: 55px; outline:none;" value="65.5" />
+                <span>Kg)</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vital-pill">
+                <span class="me-1">Talla(</span>
+                <input type="number" step="0.1" id="consTalla" class="border-0 text-center fw-semibold" style="width: 55px; outline:none;" value="164" />
+                <span>cm)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-2">
+        <input type="text" id="consAnamnesis" class="vital-line-input" placeholder="Anamnesis / Historia de la Enfermedad" />
+    </div>
+    <div class="mb-2">
+        <input type="text" id="consExploracion" class="vital-line-input" placeholder="Exploracion Física" />
+    </div>
+    <div>
+        <input type="text" id="consPlan" class="vital-line-input" placeholder="Plan de Tratamiento" />
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- 2. Diagnósticos CIE-10 -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold mb-3">2.Diagnosticos CIE-10</h6>
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-3"><label class="small text-secondary mb-0">Buscar CIE-10:</label></div>
+                <div class="col-6">
+                    <select id="selCIE10" class="form-select form-select-sm rounded-pill" style="border: 1.5px solid #4a90e2;">
+                        @foreach (var cie in catalogoCIE10)
+                        {
+                            <option value="@cie.DiagnosticoID" data-cod="@cie.CodigoCIE10" data-desc="@cie.DescripcionCIE10">
+                                @cie.CodigoCIE10 - @cie.DescripcionCIE10
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3 align-items-center">
+                <div class="col-3"><label class="small text-secondary mb-0">Criterio</label></div>
+                <div class="col-4">
+                    <select id="selCriterioCIE" class="form-select form-select-sm" style="border: 1.5px solid #4a90e2;">
+                        <option value="Definitivo">Definitivo</option>
+                        <option value="Presuntivo">Presuntivo</option>
+                    </select>
+                </div>
+                <div class="col-5 text-end">
+                    <button type="button" class="btn-dark-pill btn-sm py-1 px-3" onclick="agregarDiagnostico()">+ Agregar Diagnostico</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0 small" style="border-color:#888;">
+                    <thead style="background-color: #d0d0d0;">
+                        <tr>
+                            <th>Codigo CIE-10</th>
+                            <th>Descripcion</th>
+                            <th>Criterio</th>
+                            <th>Observacion</th>
+                            <th class="text-center">Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyDiagnosticos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Receta Médica -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <h6 class="fw-bold mb-2">3.Receta médica</h6>
+                <div class="row g-2 mb-2 align-items-center">
+                    <div class="col-3"><label class="small text-secondary mb-0">Medicamento:</label></div>
+                    <div class="col-7">
+                        <select id="selMedicamento" class="form-select form-select-sm" style="border: 1.5px solid #4a90e2;">
+                            @foreach (var m in catalogoMeds)
+                            {
+                                <option value="@m.MedicamentoID" data-nombre="@m.NombreGenerico @m.Concentracion">
+                                    @m.NombreGenerico @m.Concentracion
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-1 mb-2 align-items-end text-center">
+                    <div class="col-2">
+                        <label class="small text-secondary d-block">Dosis</label>
+                        <input type="text" id="recDosis" class="form-control form-control-sm rounded-pill border-dark text-center px-1" value="1 tableta" />
+                    </div>
+                    <div class="col-3">
+                        <label class="small text-secondary d-block">Frecuencia</label>
+                        <input type="text" id="recFrecuencia" class="form-control form-control-sm rounded-pill border-dark text-center px-1" value="Cada 24 h" />
+                    </div>
+                    <div class="col-2">
+                        <label class="small text-secondary d-block">Duración</label>
+                        <input type="number" id="recDias" class="form-control form-control-sm rounded-pill border-dark text-center px-1" value="3" min="1" />
+                    </div>
+                    <div class="col-2">
+                        <label class="small text-secondary d-block">Vía</label>
+                        <input type="text" id="recVia" class="form-control form-control-sm rounded-pill border-dark text-center px-1" value="Oral" />
+                    </div>
+                    <div class="col-3">
+                        <button type="button" class="btn-dark-pill btn-sm py-1 px-2 w-100" onclick="agregarMedicamento()">+ Agregar Receta</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm table-bordered align-middle mb-2 small" style="border-color:#888;">
+                        <thead style="background-color: #d0d0d0;">
+                            <tr>
+                                <th>Medicamento</th>
+                                <th>Dosis</th>
+                                <th>Frecuencia</th>
+                                <th>Días</th>
+                                <th>Vía</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyReceta"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-end mt-2">
+                <button type="button" class="btn-dark-pill btn-sm py-1 px-4" onclick="guardarConsultaCompleta()">
+                    + Firma y Finalizar Consulta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let listaDiagnosticos = [];
+        let listaReceta = [];
+
+        function renderDiagnosticos() {
+            const tbody = document.getElementById("tbodyDiagnosticos");
+            tbody.innerHTML = "";
+            listaDiagnosticos.forEach((d, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${d.codigo}</td>
+                        <td>${d.descripcion}</td>
+                        <td>${d.tipoCriterio}</td>
+                        <td><input type="text" class="form-control form-control-sm" style="border:1.5px solid #4a90e2;" value="${d.observacion}" onchange="listaDiagnosticos[${idx}].observacion=this.value" /></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-dark py-0 px-2" onclick="listaDiagnosticos.splice(${idx},1);renderDiagnosticos();">✕</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function agregarDiagnostico() {
+            const sel = document.getElementById("selCIE10");
+            const opt = sel.options[sel.selectedIndex];
+            const id = parseInt(sel.value);
+
+            if (listaDiagnosticos.some(x => x.diagnosticoID === id)) {
+                mostrarModalClinica("Aviso: Este código CIE-10 ya fue agregado.");
+                return;
+            }
+            listaDiagnosticos.push({
+                diagnosticoID: id,
+                codigo: opt.getAttribute("data-cod"),
+                descripcion: opt.getAttribute("data-desc"),
+                tipoCriterio: document.getElementById("selCriterioCIE").value,
+                observacion: ""
+            });
+            renderDiagnosticos();
+        }
+
+        function renderReceta() {
+            const tbody = document.getElementById("tbodyReceta");
+            tbody.innerHTML = "";
+            listaReceta.forEach((r, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r.nombre}</td>
+                        <td>${r.dosis}</td>
+                        <td>${r.frecuencia}</td>
+                        <td>${r.duracionDias}</td>
+                        <td>${r.viaAdministracion}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-dark py-0 px-2" onclick="listaReceta.splice(${idx},1);renderReceta();">✕</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function agregarMedicamento() {
+            const sel = document.getElementById("selMedicamento");
+            const opt = sel.options[sel.selectedIndex];
+            const nombreMed = opt.getAttribute("data-nombre");
+            const alergias = document.getElementById("txtAlergiaActiva").value;
+
+            if (alergias && alergias !== "Ninguna") {
+                const listaAlergenos = alergias.split(",").map(x => x.trim().toLowerCase());
+                const conflicto = listaAlergenos.find(al => nombreMed.toLowerCase().includes(al));
+                if (conflicto) {
+                    mostrarModalClinica(ALERTA DE FARMACOVIGILANCIA: El paciente es alérgico a '${conflicto.toUpperCase()}'. No se puede recetar '${nombreMed}'.);
+                    return;
+                }
+            }
+
+            listaReceta.push({
+                medicamentoID: parseInt(sel.value),
+                nombre: nombreMed,
+                dosis: document.getElementById("recDosis").value.trim(),
+                frecuencia: document.getElementById("recFrecuencia").value.trim(),
+                duracionDias: parseInt(document.getElementById("recDias").value) || 3,
+                viaAdministracion: document.getElementById("recVia").value.trim()
+            });
+            renderReceta();
+        }
+
+        async function guardarConsultaCompleta() {
+            const citaId = parseInt(document.getElementById("consCitaID").value);
+            const presion = document.getElementById("consPresion").value.trim();
+            const temp = parseFloat(document.getElementById("consTemp").value);
+            const peso = parseFloat(document.getElementById("consPeso").value);
+            const talla = parseFloat(document.getElementById("consTalla").value);
+            const anamnesis = document.getElementById("consAnamnesis").value.trim();
+            const exploracion = document.getElementById("consExploracion").value.trim();
+            const plan = document.getElementById("consPlan").value.trim();
+
+            if (!/^\d{2,3}\/\d{2,3}$/.test(presion)) {
+                mostrarModalClinica("Error: La presión arterial debe tener el formato sistólica/diastólica (ej. 120/80).");
+                return;
+            }
+            if (isNaN(temp) || temp < 34 || temp > 42.5) {
+                mostrarModalClinica("Error: La temperatura corporal debe estar entre 34.0 °C y 42.5 °C.");
+                return;
+            }
+            if (isNaN(peso) || peso <= 0 || isNaN(talla) || talla <= 0) {
+                mostrarModalClinica("Error: El peso y la talla deben ser valores mayores a cero.");
+                return;
+            }
+            if (!anamnesis || !exploracion || !plan) {
+                mostrarModalClinica("Campos obligatorios: Complete la Anamnesis, Exploración Física y Plan de Tratamiento.");
+                return;
+            }
+            if (listaDiagnosticos.length === 0) {
+                mostrarModalClinica("Obligatorio: Debe agregar al menos un diagnóstico CIE-10 a la consulta.");
+                return;
+            }
+
+            const dto = {
+                citaID: citaId,
+                presionArterial: presion,
+                temperaturaCorporal: temp,
+                pesoKG: peso,
+                tallaCM: talla,
+                anamnesis: anamnesis,
+                exploracionFisica: exploracion,
+                planTratamiento: plan,
+                diagnosticos: listaDiagnosticos,
+                recetaMedicamentos: listaReceta
+            };
+
+            const res = await fetch("/Consulta/Registrar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                mostrarModalClinica(data.message || "Error al finalizar la consulta.");
+                return;
+            }
+
+            mostrarModalClinica(data.message, () => {
+                window.location.href = "/Factura/Index";
+            });
+        }
+    </script>
+}

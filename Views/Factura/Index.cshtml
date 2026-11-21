@@ -1,0 +1,279 @@
+﻿@using ClinicaAmanecer.Models
+@model IReadOnlyList<ClinicaAmanecer.Models.Factura>
+@{
+    ViewData["Title"] = "Facturacion/Caja";
+    ViewData["HeaderTitle"] = "Facturacion/Caja";
+    var pacientes = ViewBag.Pacientes as IReadOnlyList<Paciente> ?? [];
+    var citasHoy = ViewBag.CitasHoy as IReadOnlyList<Cita> ?? [];
+    var servicios = ViewBag.ServiciosClinicos as IReadOnlyList<ServicioClinico> ?? [];
+    string numFactura = ViewBag.NumeroFacturaSugerido ?? "FAC-2026-00125";
+}
+
+<div class="row g-3 mb-3">
+    <!-- 1. Datos de Factura -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">Datos de Factura</h6>
+                <button type="button" class="btn-dark-pill btn-sm py-1 px-4" onclick="agregarServicioFactura()">Agregar</button>
+            </div>
+            <input type="hidden" id="facNumero" value="@numFactura" />
+
+            <div class="row mb-2 align-items-center">
+                <label class="col-sm-4 col-form-label small text-secondary">Fecha Emisión:</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control form-control-sm" style="border: 1.5px solid #4a90e2;" value="@DateTime.Now.ToString("dd/MM/yyyy")" readonly />
+                </div>
+            </div>
+
+            <div class="row mb-2 align-items-center">
+                <label class="col-sm-4 col-form-label small text-secondary">Paciente:</label>
+                <div class="col-sm-8">
+                    <select id="facPacienteID" class="form-select form-select-sm" style="border: 1.5px solid #4a90e2;">
+                        @foreach (var p in pacientes)
+                        {
+                            <option value="@p.PacienteID">@p.Nombres @p.Apellidos (@p.NumeroExpediente)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-2 align-items-center">
+                <label class="col-sm-4 col-form-label small text-secondary">Citas Asociada:</label>
+                <div class="col-sm-8">
+                    <select id="facCitaID" class="form-select form-select-sm" style="border: 1.5px solid #4a90e2;">
+                        @foreach (var c in citasHoy)
+                        {
+                            <option value="@c.CitaID">Cita #@c.CitaID - @c.Paciente?.Nombres (@c.MotivoConsulta)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+                <label class="col-sm-4 col-form-label small text-secondary">Cajero en Turno:</label>
+                <div class="col-sm-5">
+                    <input type="text" class="form-control form-control-sm" style="border: 1.5px solid #4a90e2;" value="@User.FindFirst("NombreCompleto")?.Value" readonly />
+                </div>
+            </div>
+
+            <div class="row align-items-center">
+                <label class="col-sm-4 col-form-label small text-secondary">Metodo de Pago</label>
+                <div class="col-sm-8 d-flex gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input border-dark" type="radio" name="metodoPago" value="Efectivo" id="mpEfectivo" checked />
+                        <label class="form-check-label small" for="mpEfectivo">Efectivo</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input border-dark" type="radio" name="metodoPago" value="Tarjeta" id="mpTarjeta" />
+                        <label class="form-check-label small" for="mpTarjeta">Tarjeta</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input border-dark" type="radio" name="metodoPago" value="Transferencia" id="mpTransf" />
+                        <label class="form-check-label small" for="mpTransf">Transferencia</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Servicio Clínico Cobrados -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <h6 class="fw-bold mb-2">Servicio Clinico Cobrados</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-semibold">Servicio Clinico:</span>
+                    <select id="selServicio" class="form-select form-select-sm rounded-pill" style="width: 68%; border: 1.8px solid #7952b3;">
+                        @foreach (var s in servicios)
+                        {
+                            <option value="@s.ServicioID" data-cod="@s.CodigoServicio" data-nom="@s.NombreServicio" data-precio="@s.PrecioUnitario">
+                                @s.CodigoServicio @s.NombreServicio -$@s.PrecioUnitario.ToString("N2")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="small text-secondary">Cantidad:</span>
+                    <input type="number" id="txtCantServicio" class="form-control form-control-sm rounded-pill border-dark text-center py-0" style="width: 60px;" value="1" min="1" />
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-2 small" style="border-color:#888;">
+                        <thead style="background-color: #b5b5b5;">
+                            <tr>
+                                <th>Código</th>
+                                <th>Servicio Clinico</th>
+                                <th>Cant.</th>
+                                <th>Precio. Unit</th>
+                                <th>SudTotal</th>
+                                <th>Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyServiciosFactura"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <div class="d-flex justify-content-end align-items-center gap-2 mb-1 small">
+                    <span>SudTotal:</span>
+                    <input type="text" id="lblSubTotal" class="form-control form-control-sm rounded-pill border-dark text-center py-0" style="width: 95px;" value="$0.00" readonly />
+                </div>
+                <div class="d-flex justify-content-end align-items-center gap-2 mb-1 small">
+                    <span>Descuento:</span>
+                    <input type="number" step="0.01" id="txtDescuento" class="form-control form-control-sm rounded-pill border-dark text-center py-0" style="width: 95px;" value="0.00" min="0" onchange="recalcularTotalesFactura()" />
+                </div>
+                <div class="d-flex justify-content-end align-items-center gap-2 mb-2 small">
+                    <span>Total Neto a Pagar:</span>
+                    <input type="text" id="lblTotalNeto" class="form-control form-control-sm rounded-pill border-dark text-center py-0" style="width: 95px;" value="$0.00" readonly />
+                </div>
+
+                <div class="text-end">
+                    <button type="button" class="btn-dark-pill btn-sm px-5 py-1" onclick="emitirFacturaCaja()">Imprimir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Historial de Facturas Emitidas en Caja -->
+<div class="card-wireframe p-3">
+    <h5 class="fw-bold mb-3">Historial de Facturas Emitidas en Caja</h5>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0 small" style="border-color:#888;">
+            <thead style="background-color: #b5b5b5;">
+                <tr>
+                    <th>N° Factura</th>
+                    <th>Fecha</th>
+                    <th>Paciente</th>
+                    <th>Método Pago</th>
+                    <th>Total Neta</th>
+                    <th>Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var f in Model)
+                {
+                    <tr>
+                        <td>@f.NumeroFactura</td>
+                        <td>@f.FechaEmision.ToString("dd/MM/yyyy")</td>
+                        <td>@f.Paciente?.Nombres @f.Paciente?.Apellidos</td>
+                        <td>@f.MetodoPago</td>
+                        <td>$@f.TotalNeto.ToString("N2")</td>
+                        <td>
+                            <span class="border border-dark px-1 me-1 fw-bold">@(f.EstadoFactura == "Pagada" ? "✓" : "✕")</span>
+                            @f.EstadoFactura.ToLower()
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-pill-purple px-3 me-2" onclick="window.print()">Imprimir</button>
+                            @if (f.EstadoFactura == "Pagada")
+                            {
+                                <button type="button" class="btn-pill-red px-3" onclick="anularFactura(@f.FacturaID)">Anular</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let listaServicios = [];
+
+        function agregarServicioFactura() {
+            const sel = document.getElementById("selServicio");
+            const opt = sel.options[sel.selectedIndex];
+            const cant = parseInt(document.getElementById("txtCantServicio").value) || 1;
+            const precio = parseFloat(opt.getAttribute("data-precio")) || 0;
+
+            if (cant <= 0) {
+                mostrarModalClinica("Error: La cantidad debe ser mayor a 0.");
+                return;
+            }
+
+            listaServicios.push({
+                servicioID: parseInt(sel.value),
+                codigo: opt.getAttribute("data-cod"),
+                nombre: opt.getAttribute("data-nom"),
+                cantidad: cant,
+                precioUnitario: precio,
+                subTotal: cant * precio
+            });
+            renderServiciosFactura();
+        }
+
+        function renderServiciosFactura() {
+            const tbody = document.getElementById("tbodyServiciosFactura");
+            tbody.innerHTML = "";
+            listaServicios.forEach((s, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.codigo}</td>
+                        <td>${s.nombre}</td>
+                        <td class="text-center">${s.cantidad}</td>
+                        <td>$${s.precioUnitario.toFixed(2)}</td>
+                        <td>$${s.subTotal.toFixed(2)}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-dark py-0 px-2" onclick="listaServicios.splice(${idx},1);renderServiciosFactura();">✕</button>
+                        </td>
+                    </tr>`;
+            });
+            recalcularTotalesFactura();
+        }
+
+        function recalcularTotalesFactura() {
+            const subTotal = listaServicios.reduce((acc, x) => acc + x.subTotal, 0);
+            let desc = parseFloat(document.getElementById("txtDescuento").value) || 0;
+            if (desc < 0 || desc > subTotal) {
+                mostrarModalClinica("Error: El descuento no puede ser negativo ni mayor que el SubTotal.");
+                desc = 0;
+                document.getElementById("txtDescuento").value = "0.00";
+            }
+            const neto = Math.max(0, subTotal - desc);
+            document.getElementById("lblSubTotal").value = "$" + subTotal.toFixed(2);
+            document.getElementById("lblTotalNeto").value = "$" + neto.toFixed(2);
+        }
+
+        async function emitirFacturaCaja() {
+            if (listaServicios.length === 0) {
+                mostrarModalClinica("Obligatorio: Debe agregar al menos un servicio clínico antes de emitir la factura.");
+                return;
+            }
+
+            const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
+            const dto = {
+                numeroFactura: document.getElementById("facNumero").value,
+                pacienteID: parseInt(document.getElementById("facPacienteID").value),
+                citaID: parseInt(document.getElementById("facCitaID").value),
+                metodoPago: metodo,
+                descuento: parseFloat(document.getElementById("txtDescuento").value) || 0,
+                servicios: listaServicios
+            };
+
+            const res = await fetch("/Factura/Emitir", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+
+            const data = await res.json();
+            mostrarModalClinica(data.message, () => {
+                if (res.ok && data.success) location.reload();
+            });
+        }
+
+        async function anularFactura(id) {
+            if (!confirm("¿Está seguro de anular esta factura?")) return;
+            const res = await fetch(/Factura/Anular?id=${id}, { method: "POST" });
+            const data = await res.json();
+            mostrarModalClinica(data.message, () => {
+                if (res.ok) location.reload();
+            });
+        }
+    </script>
+}

@@ -1,0 +1,209 @@
+﻿@{
+    ViewData["Title"] = "¡Alto ahí, intruso!";
+    ViewData["HeaderTitle"] = "Acceso Restringido";
+}
+
+<style>
+    .denied-wrapper {
+        min-height: 82vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    .denied-card {
+        max-width: 620px;
+        width: 100%;
+        border: 3px solid #212529;
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 35px 40px;
+        text-align: center;
+        position: relative;
+        box-shadow: 10px 10px 0px #212529;
+        animation: cardEntryShake 0.7s ease-in-out;
+    }
+
+    @@keyframes cardEntryShake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+
+        15%, 45%, 75% {
+            transform: translateX(-14px) rotate(-1.5deg);
+        }
+
+        30%, 60%, 90% {
+            transform: translateX(14px) rotate(1.5deg);
+        }
+    }
+
+    .siren-bar {
+        height: 10px;
+        width: 100%;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        animation: sirenFlash 0.6s infinite alternate;
+    }
+
+    @@keyframes sirenFlash {
+        0% {
+            background: linear-gradient(90deg, #ff3b30 50%, #5a3ea1 50%);
+            box-shadow: 0 0 12px #ff3b30;
+        }
+
+        100% {
+            background: linear-gradient(90deg, #5a3ea1 50%, #ff3b30 50%);
+            box-shadow: 0 0 12px #5a3ea1;
+        }
+    }
+
+    .taunt-stage {
+        background-color: #f3effb;
+        border: 2px dashed #6f42c1;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .taunt-face {
+        font-size: 4.5rem;
+        display: inline-block;
+        animation: headMock 0.9s infinite ease-in-out;
+        user-select: none;
+    }
+
+    @@keyframes headMock {
+        0%, 100% {
+            transform: rotate(-12deg) scale(1);
+        }
+
+        50% {
+            transform: rotate(12deg) scale(1.08);
+        }
+    }
+
+    .wagging-finger {
+        font-size: 3.4rem;
+        display: inline-block;
+        margin-left: 8px;
+        transform-origin: bottom center;
+        animation: fingerWag 0.45s infinite alternate ease-in-out;
+        user-select: none;
+    }
+
+    @@keyframes fingerWag {
+        0% {
+            transform: rotate(-28deg);
+        }
+
+        100% {
+            transform: rotate(28deg);
+        }
+    }
+
+    .magic-word-banner {
+        background-color: #212529;
+        color: #ffdf5d;
+        font-family: 'Consolas', monospace;
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 8px 14px;
+        border-radius: 8px;
+        display: inline-block;
+        margin-top: 10px;
+        animation: pulseText 1.2s infinite;
+    }
+
+    @@keyframes pulseText {
+        0%, 100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.04);
+        }
+    }
+
+    .runaway-zone {
+        position: relative;
+        height: 55px;
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+    }
+
+    #btnTrampa {
+        transition: transform 0.15s ease-out;
+        position: relative;
+    }
+</style>
+
+<div class="denied-wrapper">
+    <div class="denied-card">
+        <div class="siren-bar"></div>
+
+        <span class="badge bg-danger px-3 py-1 mb-2 fw-bold">ERROR 403 — INTENTO BLOQUEADO</span>
+        <h3 class="fw-bold mb-3">¡Ah, ah, ah! ¡Por ahí no se puede!</h3>
+
+        <div class="taunt-stage">
+            <div>
+                <span class="taunt-face"></span>
+                <span class="wagging-finger"></span>
+            </div>
+            <div class="magic-word-banner" id="tauntText">
+                "¡No dijiste la palabra mágica!"
+            </div>
+        </div>
+
+        <p class="text-dark fw-semibold mb-2">
+            Buen intento cambiando la ruta o entrando sin permiso, pero tu rol actual tiene una enorme <strong class="text-danger">✗</strong> en este apartado de <strong>Clínica Amanecer</strong>.
+        </p>
+        <p class="text-muted small mb-3">
+            El sistema de Seguridad Híbrida ya registró tu curiosidad. Pídele permiso al Administrador... o regresa por donde viniste.
+        </p>
+
+        <div class="runaway-zone">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-dark fw-bold px-4 py-2">
+                <i class="bi bi-arrow-left-circle me-1"></i> Volver humildemente al Dashboard
+            </a>
+
+            <button type="button" id="btnTrampa" class="btn btn-outline-danger fw-bold px-3 py-2"
+                    onmouseover="escaparBoton()" onclick="escaparBoton()">
+                Entrar de todos modos
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const frasesBurla = [
+            "\"¡No dijiste la palabra mágica!\"",
+            "\"¡Casi! Pero igual no vas a entrar \"",
+            "\"¡Sigue intentando, ese botón no se deja tocar!\"",
+            "\"¡Solo el Administrador tiene el poder aquí! \"",
+            "\"¡Acceso ultra-denegado por la Dra. Emely y la Dra. Yurika!\""
+        ];
+
+        let contadorIntentos = 0;
+
+        function escaparBoton() {
+            const btn = document.getElementById("btnTrampa");
+            const banner = document.getElementById("tauntText");
+
+            const randomX = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 140) + 60);
+            const randomY = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 90) + 30);
+
+            btn.style.transform = translate(${randomX}px, ${randomY}px);
+
+            contadorIntentos = (contadorIntentos + 1) % frasesBurla.length;
+            banner.textContent = frasesBurla[contadorIntentos];
+        }
+    </script>
+}

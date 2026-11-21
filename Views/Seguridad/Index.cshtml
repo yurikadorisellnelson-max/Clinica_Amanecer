@@ -1,0 +1,272 @@
+﻿@using ClinicaAmanecer.DTOS
+@{
+    ViewData["Title"] = "Usuarios y Permisos";
+    ViewData["HeaderTitle"] = "Usuarios y Permisos";
+    var usuarios = ViewBag.Usuarios as IReadOnlyList<UserListItemDto> ?? [];
+    var roles = ViewBag.Roles as IReadOnlyList<RoleWithPermisosDto> ?? [];
+    var permisos = ViewBag.Permisos as IReadOnlyList<PermisoDto> ?? [];
+    var modulos = new[] { "Dashboard", "Pacientes", "Citas Médicas", "Consultas y Expediente", "Facturación/Caja", "Usuarios y Permisos" };
+}
+
+<div class="row g-3 mb-3">
+    <!-- 1. Crear Nuevo Usuario y Asignar Rol -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold text-center mb-3">1. Crear Nuevo Usuario y Asignar Rol</h6>
+            <form id="formCrearUsuario">
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Nombre Completo:</label>
+                    <div class="col-sm-8">
+                        <input type="text" id="usuNombre" class="form-control form-control-sm" style="border: 1.5px solid #4a90e2;" required />
+                    </div>
+                </div>
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Usuario:</label>
+                    <div class="col-sm-8">
+                        <input type="text" id="usuUserName" class="form-control form-control-sm" style="border: 1.5px solid #4a90e2;" required />
+                    </div>
+                </div>
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Correo:</label>
+                    <div class="col-sm-8">
+                        <input type="email" id="usuEmail" class="form-control form-control-sm" style="border: 1.5px solid #4a90e2;" required />
+                    </div>
+                </div>
+                <div class="row mb-2 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Contraseña:</label>
+                    <div class="col-sm-8">
+                        <div class="input-group input-group-sm">
+                            <input type="password" id="usuPassword" class="form-control" style="border: 1.5px solid #4a90e2;" minlength="6" required />
+                            <button type="button" class="btn btn-outline-secondary" style="border: 1.5px solid #4a90e2;" onclick="toggleUsuPass()">
+                                <i id="iconUsuEye" class="bi bi-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-4 col-form-label small text-secondary">Seleccione Rol :</label>
+                    <div class="col-sm-8">
+                        <select id="usuRoleID" class="form-select form-select-sm" style="border: 1.5px solid #4a90e2;" required>
+                            @foreach (var r in roles)
+                            {
+                                <option value="@r.RoleID">@r.NombreRol</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input border-dark" type="checkbox" id="usuActivo" checked />
+                        <label class="form-check-label small text-secondary" for="usuActivo">Cuenta Activa</label>
+                    </div>
+                    <button type="submit" class="btn-dark-pill btn-sm">+ Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Directorio de Usuarios Registrados -->
+    <div class="col-lg-6">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold mb-3">2.Directorio de Usuarios Registrados</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0 small" style="border-color:#888;">
+                    <thead style="background-color: #b5b5b5;">
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Nombre</th>
+                            <th>Rol Asignado</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in usuarios)
+                        {
+                            <tr>
+                                <td>@u.UserName</td>
+                                <td>@u.NombreCompleto</td>
+                                <td>@u.NombreRol</td>
+                                <td>Activo <span class="border border-dark px-1 fw-bold">✓</span></td>
+                                <td class="text-center">
+                                    <button type="button" class="btn-pill-purple me-1" style="background-color:#b2f2bb;" onclick="seleccionarUsuarioExcepcion(@u.UsuarioID)">Cambiar Rol</button>
+                                    <button type="button" class="btn-pill-purple" style="background-color:#ffec99;" onclick="seleccionarUsuarioExcepcion(@u.UsuarioID)">Permisos</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- 3. Matriz de Permisos por Rol -->
+    <div class="col-lg-7">
+        <div class="card-wireframe p-3 h-100">
+            <h6 class="fw-bold mb-3">3.Matriz de Permisos por Rol(Acceso/sin Acceso)</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered text-center align-middle mb-0 small" style="border-color:#888;">
+                    <thead style="background-color: #d0d0d0;">
+                        <tr>
+                            <th class="text-start">Rol</th>
+                            @foreach (var mod in modulos)
+                            {
+                                <th>@mod</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in roles)
+                        {
+                            <tr>
+                                <td class="text-start">@r.NombreRol</td>
+                                @foreach (var mod in modulos)
+                                {
+                                    var permisoVista = permisos.FirstOrDefault(p => p.Modulo == mod && p.CodigoPermiso.EndsWith(".ver"));
+                                    bool tieneAcceso = r.Permisos.Any(p => p.Modulo == mod);
+                                    <td>
+                                        @if (permisoVista != null)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm fw-bold @(tieneAcceso ? "btn-outline-dark" : "btn-dark")"
+                                                    style="width: 26px; height: 26px; padding: 0; line-height: 1;"
+                                                    onclick="toggleRolPermiso(@r.RoleID, @permisoVista.PermisoID, @(tieneAcceso ? "false" : "true"))">
+                                                @(tieneAcceso ? "✓" : "✕")
+                                            </button>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Asignar o Remover Permiso a un Usuario Específico -->
+    <div class="col-lg-5">
+        <div class="card-wireframe p-3 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <h6 class="fw-bold mb-3">4.Asignar o Remover Permiso a un Usuario Especifico</h6>
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <label class="small fw-bold mb-0">Buscar/Seleccionar Usuario:</label>
+                    <select id="selUsuarioExcepcion" class="form-select form-select-sm rounded-pill" style="width: 60%; border: 1.8px solid #7952b3;">
+                        @foreach (var u in usuarios)
+                        {
+                            <option value="@u.UsuarioID">@u.NombreCompleto (@u.NombreRol)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="table-responsive" style="max-height: 185px; overflow-y: auto;">
+                    <table class="table table-sm table-borderless align-middle mb-0 small">
+                        <tbody>
+                            @foreach (var p in permisos.Take(5))
+                            {
+                                <tr>
+                                    <td class="fw-semibold"><i class="bi bi-card-checklist me-1"></i> @p.NombreVisible</td>
+                                    <td>
+                                        <input type="radio" name="perm_@p.PermisoID" onclick="seleccionarCambioPermiso(@p.PermisoID, true)" checked /> Permitido
+                                    </td>
+                                    <td>
+                                        <input type="radio" name="perm_@p.PermisoID" onclick="seleccionarCambioPermiso(@p.PermisoID, false)" /> Denegados
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button type="button" class="btn-dark-pill btn-sm w-100 mt-3 py-2" onclick="guardarCambiosPermisosLote()">
+                + Guardar Cambios de Permisos
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let cambiosPendientesUsuario = {};
+
+        function toggleUsuPass() {
+            const inp = document.getElementById("usuPassword");
+            const ic = document.getElementById("iconUsuEye");
+            if (inp.type === "password") {
+                inp.type = "text";
+                ic.className = "bi bi-eye";
+            } else {
+                inp.type = "password";
+                ic.className = "bi bi-eye-slash";
+            }
+        }
+
+        function seleccionarUsuarioExcepcion(id) {
+            document.getElementById("selUsuarioExcepcion").value = id;
+            cambiosPendientesUsuario = {};
+            mostrarModalClinica("Usuario seleccionado en el panel inferior de excepciones de permisos.");
+        }
+
+        function seleccionarCambioPermiso(permisoId, esPermitido) {
+            cambiosPendientesUsuario[permisoId] = esPermitido;
+        }
+
+        async function guardarCambiosPermisosLote() {
+            const usuarioId = parseInt(document.getElementById("selUsuarioExcepcion").value);
+            const entries = Object.entries(cambiosPendientesUsuario);
+            if (entries.length === 0) {
+                mostrarModalClinica("Aviso: Seleccione al menos un permiso (Permitido o Denegado) para aplicar el cambio.");
+                return;
+            }
+
+            for (const [permisoId, esPermitido] of entries) {
+                await fetch("/Seguridad/AsignarPermisoUsuario", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        usuarioID: usuarioId,
+                        permisoID: parseInt(permisoId),
+                        esPermitido: esPermitido,
+                        motivoCambio: "Actualizado desde panel de seguridad"
+                    })
+                });
+            }
+            cambiosPendientesUsuario = {};
+            mostrarModalClinica("Cambios de permisos guardados correctamente para el usuario seleccionado.");
+        }
+
+        document.getElementById("formCrearUsuario").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const dto = {
+                nombreCompleto: document.getElementById("usuNombre").value.trim(),
+                userName: document.getElementById("usuUserName").value.trim(),
+                email: document.getElementById("usuEmail").value.trim(),
+                password: document.getElementById("usuPassword").value,
+                roleID: parseInt(document.getElementById("usuRoleID").value),
+                activo: document.getElementById("usuActivo").checked
+            };
+
+            const res = await fetch("/Seguridad/CrearUsuario", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+            const data = await res.json();
+            mostrarModalClinica(data.message, () => {
+                if (res.ok) location.reload();
+            });
+        });
+
+        async function toggleRolPermiso(roleId, permisoId, otorgar) {
+            const res = await fetch(/Seguridad/TogglePermisoRol?roleId=${roleId}&permisoId=${permisoId}&otorgar=${otorgar}, {
+                method: "POST"
+            });
+            if (res.ok) {
+                mostrarModalClinica("Permiso del rol actualizado en vivo.", () => location.reload());
+            }
+        }
+    </script>
+}

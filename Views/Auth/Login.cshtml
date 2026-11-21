@@ -1,0 +1,285 @@
+﻿@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_Layout";
+}
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .login-fullscreen {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+    }
+
+    .top-login-bar {
+        background-color: #e2d9f3;
+        border-bottom: 2px solid #6f42c1;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .top-login-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .login-split {
+        flex: 1;
+        display: flex;
+        width: 100%;
+        height: calc(100vh - 54px);
+    }
+
+    .left-brand-panel {
+        flex: 0 0 50%;
+        max-width: 50%;
+        background-color: #ebebeb;
+        border-right: 2px solid #6f42c1;
+        padding: 40px 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+
+    .brand-title {
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .logo-box {
+        background-color: #e2e2e2;
+        padding: 25px 35px;
+        width: 100%;
+        max-width: 480px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .brand-subtitle {
+        font-size: 1.35rem;
+        font-weight: 500;
+        color: #222;
+        line-height: 1.4;
+        width: 100%;
+        max-width: 460px;
+        text-align: left;
+        margin: 0;
+    }
+
+    .right-form-panel {
+        flex: 0 0 50%;
+        max-width: 50%;
+        background-color: #f8f9fc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+    }
+
+    .login-card-inner {
+        width: 100%;
+        max-width: 460px;
+        border: 2px solid #212529;
+        border-radius: 12px;
+        padding: 36px 42px;
+        background: #ffffff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+
+    .input-wireframe {
+        background-color: #e3e3e3;
+        border: 1.8px solid #212529;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+    }
+
+        .input-wireframe input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            font-size: 0.95rem;
+            color: #111;
+            padding-left: 10px;
+        }
+
+    .btn-submit-wireframe {
+        background-color: #1a1919;
+        color: #fff;
+        border: 2px solid #1a1919;
+        border-radius: 8px;
+        padding: 11px 22px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        transition: opacity 0.2s;
+    }
+
+        .btn-submit-wireframe:hover {
+            opacity: 0.9;
+            color: #fff;
+        }
+
+    .restricted-box {
+        background-color: #e3e3e3;
+        border: 1.5px solid #212529;
+        border-radius: 8px;
+        padding: 10px 14px;
+        text-align: center;
+        font-size: 0.82rem;
+        color: #222;
+        line-height: 1.35;
+    }
+</style>
+
+<div class="login-fullscreen">
+    <header class="top-login-bar">
+        <h1 class="top-login-title">Clínica Amanecer — Inicio de Sesión</h1>
+        <span class="badge bg-dark px-3 py-2">Portal Institucional</span>
+    </header>
+
+    <div class="login-split">
+        <!-- Mitad Izquierda: Marca y Logo -->
+        <div class="left-brand-panel">
+            <h2 class="brand-title">Clínica Amanecer</h2>
+
+            <div class="logo-box">
+                <svg viewBox="0 0 420 220" width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 112 115 L 112 152 L 45 152 L 45 88 L 112 88 L 112 24 L 176 24 L 176 88 L 210 88"
+                          fill="none" stroke="#1a1a1a" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <line x1="112" y1="202" x2="395" y2="202" stroke="#1a1a1a" stroke-width="6.5" stroke-linecap="round" />
+                    <path d="M 212 202 A 64 64 0 0 1 340 202" fill="none" stroke="#1a1a1a" stroke-width="6.5" />
+                    <line x1="188" y1="182" x2="162" y2="174" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="196" y1="154" x2="162" y2="134" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="214" y1="132" x2="198" y2="112" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="238" y1="118" x2="225" y2="82" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="274" y1="114" x2="274" y2="68" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="302" y1="118" x2="314" y2="90" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="324" y1="132" x2="352" y2="92" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="342" y1="154" x2="378" y2="138" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                    <line x1="352" y1="180" x2="386" y2="176" stroke="#1a1a1a" stroke-width="5.5" stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <p class="brand-subtitle">
+                Sistema integral de Gestión Médica,<br />
+                Expediente Clínico y Facturación
+            </p>
+        </div>
+
+        <!-- Mitad Derecha: Formulario -->
+        <div class="right-form-panel">
+            <div class="login-card-inner">
+                <h4 class="fw-bold text-center mb-1" style="font-size: 1.55rem;">Iniciar Sesión</h4>
+                <p class="text-center mb-4" style="font-size: 0.9rem; color: #444;">Ingrese sus credenciales</p>
+
+                <div id="loginAlert" class="alert alert-danger d-none py-2 small"></div>
+
+                <form id="formLogin">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold mb-1">Nombre de usuario</label>
+                        <div class="input-wireframe">
+                            <i class="bi bi-person-fill fs-5 text-dark"></i>
+                            <input type="text" id="txtUser" placeholder="ej.yurika / admin" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold mb-1">Contraseña</label>
+                        <div class="input-wireframe">
+                            <i class="bi bi-lock-fill fs-5 text-dark"></i>
+                            <input type="password" id="txtPass" required />
+                            <button type="button" class="btn btn-sm p-0 border-0 bg-transparent text-dark" onclick="togglePassword()">
+                                <i id="iconEye" class="bi bi-eye-slash-fill fs-6"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                        <div class="form-check d-flex align-items-center gap-2 mb-0">
+                            <input class="form-check-input m-0" type="checkbox" id="chkRemember"
+                                   style="width: 17px; height: 17px; border: 2px solid #5a3ea1; background-color: #dfd6f7;" />
+                            <label class="form-check-label small text-dark" for="chkRemember">Recordar mi usuario</label>
+                        </div>
+                        <a href="#" class="text-dark text-decoration-none" style="font-size: 0.78rem;">¿Olvidó su contraseña?</a>
+                    </div>
+
+                    <button type="submit" class="btn-submit-wireframe mb-4">
+                        <span>Iniciar Sesión</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+
+                    <div class="restricted-box">
+                        Acceso restringido únicamente a personal<br />
+                        autorizado de Clínica Amanecer
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePassword() {
+            const input = document.getElementById("txtPass");
+            const icon = document.getElementById("iconEye");
+            if (input.type === "password") {
+                input.type = "text";
+                icon.className = "bi bi-eye-fill fs-6";
+            } else {
+                input.type = "password";
+                icon.className = "bi bi-eye-slash-fill fs-6";
+            }
+        }
+
+        document.getElementById("formLogin").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const alertBox = document.getElementById("loginAlert");
+            alertBox.classList.add("d-none");
+
+            const payload = {
+                userNameOrEmail: document.getElementById("txtUser").value,
+                password: document.getElementById("txtPass").value,
+                recordarUsuario: document.getElementById("chkRemember").checked
+            };
+
+            const res = await fetch("/Auth/Login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                window.location.href = "/Home/Index";
+            } else {
+                alertBox.textContent = data.message || "Error al iniciar sesión.";
+                alertBox.classList.remove("d-none");
+            }
+        });
+    </script>
+}
